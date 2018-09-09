@@ -17,5 +17,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         genAlg = new GenAlg();
+        for(int i=0; i<10; i++) {
+            String chrom = genAlg.getChromosome(i);
+            String equation = genAlg.translateChromosome(chrom);
+            String validEquation = genAlg.makeEquationValid(equation);
+            float solvedEq = genAlg.solveEquation(validEquation);
+            Log.e("chromosome", (validEquation+"="+solvedEq));
+        }
     }
 }

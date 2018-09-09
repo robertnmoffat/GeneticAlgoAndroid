@@ -54,6 +54,50 @@ public class GenAlg {
         initChromosomeList();
     }
 
+    public float solveEquation(String equation){
+        char c = equation.charAt(0);
+        float value = Character.getNumericValue(c);
+        for(int i=1; i<equation.length(); i++){
+            c = equation.charAt(i);
+            switch (c){
+                case '+':
+                    value+=Character.getNumericValue(equation.charAt(++i));
+                    break;
+                case '-':
+                    value-=Character.getNumericValue(equation.charAt(++i));
+                    break;
+                case '*':
+                    value*=Character.getNumericValue(equation.charAt(++i));
+                    break;
+                case '/':
+                    value/=Character.getNumericValue(equation.charAt(++i));
+                    break;
+            }
+        }
+        return value;
+    }
+
+    public String solveMultiplications(String equation){
+        char[] newEq = new char[equation.length()];
+        int eqPos =0;
+        for(int i=0; i<equation.length(); i++){
+            char nextC = equation.charAt(i+1);
+            if(nextC=='+'||nextC=='-'){
+                newEq[eqPos++]=equation.charAt(i++);
+                newEq[eqPos++]=equation.charAt(i);
+            }else{
+                int first = equation.charAt(i);
+                int second = equation.charAt(i+2);
+                i+=2;
+                if(nextC=='*'){
+                    newEq[eqPos++]=(char)(48+(first*second));
+                }else if(nextC=='/'){
+                    newEq[eqPos++]=(char)(48+(first/second));//NOT GOING TO WORK, MUST BE FIXED. WILL TRY AND USE FLOATS AS ASCII CHARACTER POSITIONS
+                }
+            }
+        }
+    }
+
     /**
      * Converts a potentially invalid math equation to a valid one
      * @param equation potentially invalid equation
