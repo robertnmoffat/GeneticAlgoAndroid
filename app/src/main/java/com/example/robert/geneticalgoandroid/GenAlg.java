@@ -55,6 +55,49 @@ public class GenAlg {
     }
 
     /**
+     * Converts a potentially invalid math equation to a valid one
+     * @param equation potentially invalid equation
+     * @return valid math equation in the form of a string
+     */
+    public String makeEquationValid(String equation){
+        char[] newEq = new char[equation.length()];
+        int eqPos = 0;
+        boolean lastWasInt = false;//if last char checked of equation was an integer
+
+        for(int i=0; i<equation.length(); i++){
+            char c = equation.charAt(i);
+            if(!lastWasInt&&!isInteger(c))continue;//If the character is not an integer, but should be
+            if(lastWasInt&&!isMathOperation(c))continue;
+
+            newEq[eqPos++]=equation.charAt(i);
+            lastWasInt=!lastWasInt;//Alternates integer and operator, so flip each time something is added to the equation
+        }
+
+        if(isMathOperation(newEq[eqPos-1]))eqPos--;
+
+        return new String(newEq, 0, eqPos);
+    }
+
+    /**
+     * is the given char a math operation
+     * @param c
+     * @return
+     */
+    public boolean isMathOperation(char c){
+        if(c==42||c==43||c==45||c==47)return true;
+        return false;
+    }
+
+    /**
+     * is the given char an integer
+     * @param c
+     * @return
+     */
+    public boolean isInteger(char c){
+        return (c>=48&&c<=57);
+    }
+
+    /**
      * Translates a chromosome into a math equation (potentially nonsense equation)
      * @param chromosome
      * @return equation string derived from the inputted chromosome
