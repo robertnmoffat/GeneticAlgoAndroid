@@ -18,6 +18,7 @@ public class GenAlg {
     String[] chromosomes;
     int[] fitness;
     Random rand;
+    int GENE_LENGTH = 4;
 
     /**
      * Default constructor for GenAlg.
@@ -42,6 +43,8 @@ public class GenAlg {
         binMap.put("1011", '-');
         binMap.put("1100", '*');
         binMap.put("1101", '/');
+        binMap.put("1110", 'N');
+        binMap.put("1111", 'N');
 
         //init arrays
         chromosomes = new String[n];
@@ -51,6 +54,24 @@ public class GenAlg {
         initChromosomeList();
     }
 
+    /**
+     * Translates a chromosome into a math equation (potentially nonsense equation)
+     * @param chromosome
+     * @return equation string derived from the inputted chromosome
+     */
+    public String translateChromosome(String chromosome){
+        int equationLength = chromosome.length()/GENE_LENGTH;
+        char[] equation = new char[equationLength];
+
+        for(int i=0; i<equationLength; i++){
+            String currentGene = chromosome.substring(i*GENE_LENGTH,(i*GENE_LENGTH)+GENE_LENGTH);//Each gene is GENE_LENGTH bits long
+
+            //translate current gene in binMap
+            equation[i]=binMap.get(currentGene);
+        }
+
+        return new String(equation);
+    }
 
     /**
      * Set initial randomization for all chromosomes
