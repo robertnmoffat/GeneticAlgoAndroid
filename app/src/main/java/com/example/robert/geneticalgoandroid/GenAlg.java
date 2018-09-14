@@ -1,5 +1,7 @@
 package com.example.robert.geneticalgoandroid;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,13 +14,18 @@ import java.util.Random;
  */
 
 public class GenAlg {
-    Map<String, Character> binMap;
-    int n=10;
-    int mutRate = 10;//Average mutations per 100 bits
-    String[] chromosomes;
-    int[] fitness;
-    Random rand;
-    int GENE_LENGTH = 4;
+    private Map<String, Character> binMap;
+    private int n=10;
+    private int mutRate = 1;//Average mutations per 100 bits
+    private  String[] chromosomes;
+    private String[] tempChromosomes;
+    private int tempChromosomeCount = 0;
+    private int crossoverRatePercent = 70;
+    private  float[] fitness, solutions, roulettePercent;
+    private float totalFitness =0.0f;
+    private Random rand;
+    private  int GENE_LENGTH = 4;
+    private float target = 23f;
 
     /**
      * Default constructor for GenAlg.
@@ -48,54 +55,104 @@ public class GenAlg {
 
         //init arrays
         chromosomes = new String[n];
-        fitness = new int[n];
+        fitness = new float[n];
+        solutions = new float[n];
+        roulettePercent = new float[n];
+        tempChromosomes = new String[n];
 
         //randomize initial values
         initChromosomeList();
     }
 
-    public float solveEquation(String equation){
-        char c = equation.charAt(0);
-        float value = Character.getNumericValue(c);
-        for(int i=1; i<equation.length(); i++){
-            c = equation.charAt(i);
-            switch (c){
-                case '+':
-                    value+=Character.getNumericValue(equation.charAt(++i));
-                    break;
-                case '-':
-                    value-=Character.getNumericValue(equation.charAt(++i));
-                    break;
-                case '*':
-                    value*=Character.getNumericValue(equation.charAt(++i));
-                    break;
-                case '/':
-                    value/=Character.getNumericValue(equation.charAt(++i));
-                    break;
-            }
+    /**
+     * Update the chromosome array with the new temp chromosome array, and then clear the temp count back to zero
+     */
+    public void updateChromosomesFromTemp(){
+        for(int i=0; i<n; i++){
+            chromosomes[i]=tempChromosomes[i];
         }
-        return value;
+        tempChromosomeCount=0;
     }
 
-    public String solveMultiplications(String equation){
-        char[] newEq = new char[equation.length()];
-        int eqPos =0;
-        for(int i=0; i<equation.length(); i++){
-            char nextC = equation.charAt(i+1);
-            if(nextC=='+'||nextC=='-'){
-                newEq[eqPos++]=equation.charAt(i++);
-                newEq[eqPos++]=equation.charAt(i);
-            }else{
-                int first = equation.charAt(i);
-                int second = equation.charAt(i+2);
-                i+=2;
-                if(nextC=='*'){
-                    newEq[eqPos++]=(char)(48+(first*second));
-                }else if(nextC=='/'){
-                    newEq[eqPos++]=(char)(48+(first/second));//NOT GOING TO WORK, MUST BE FIXED. WILL TRY AND USE FLOATS AS ASCII CHARACTER POSITIONS
+    /**
+     *Boolean of whether or not a crossover should take place based on the crossover chance percentage
+     * @return boolean whether a crossover should take place
+     */
+    public boolean crossoverChance(){
+        return (rand.nextInt(100)<=crossoverRatePercent);
+    }
+
+    /**
+     * Crossover two chromosomes at a random position
+     * @param index1 index of chromosome 1
+     * @param index2 index of chromosome 2
+     */
+    public void crossoverChromosomes(int index1, int index2){
+        char[] newChrom1, newChrom2;
+        int length = chromosomes[0].length();
+        newChrom1 = new char[length];//set to the length of a chromosome
+        newChrom2 = new char[length];
+        String oldChrom1 = chromosomes[index1], oldChrom2 = chromosomes[index2];
+        int crossPos = rand.nextInt(n);
+
+        if(crossoverChance()) {
+            for (int i = 0; i < length; i++) {
+                if (i < crossPos) {
+                    newChrom1[i] = oldChrom1.charAt(i);
+                    newChrom2[i] = oldChrom2.charAt(i);
+                } else {
+                    newChrom1[i] = oldChrom2.charAt(i);
+                    newChrom2[i] = oldChrom1.charAt(i);
                 }
             }
+        }else{
+            for (int i = 0; i < length; i++) {
+                newChrom1[i] = oldChrom1.charAt(i);
+                newChrom2[i] = oldChrom2.charAt(i);
+            }
         }
+
+        tempChromosomes[tempChromosomeCount]=new String(newChrom1);
+        tempChromosomes[tempChromosomeCount+1]=new String(newChrom2);
+        tempChromosomeCount+=2;//increment the count by two so that you know where you are in the array of new chromosomes.
+    }
+
+    public void resetTempChromosomes(){
+        tempChromosomeCount = 0;
+    }
+
+    /**
+     * Returns a random chromosome position with weighted chance based on fitness score
+     * @return
+     */
+    public int rouletteSelectChromosomePosition(){
+        int roll = rand.nextInt(100);
+        float percentPassed = 0.0f;
+        for(int i=0; i<n; i++){
+            percentPassed+=roulettePercent[i];
+            if(percentPassed>=roll)return i;
+        }
+        return 0;
+    }
+
+    /**
+     * Converts an equation string into an Equation object
+     * @param strEq
+     * @return formatted equation object
+     */
+    public Equation makeEquationObject(String strEq){
+        float[] numbers = new float[strEq.length()/2+1];
+        char[] operators = new char[strEq.length()/2];
+
+        for(int i=0; i<strEq.length(); i++){
+            if(i%2==0){//numbers
+                numbers[i/2]=Character.getNumericValue(strEq.charAt(i));
+            }else{//operators
+                operators[i/2]=strEq.charAt(i);
+            }
+        }
+
+        return new Equation(numbers, operators);
     }
 
     /**
@@ -181,7 +238,8 @@ public class GenAlg {
         char currentChar;
         for(int i=0; i<chromosome.length(); i++){
             currentChar = chromosome.charAt(i);
-            if(rand.nextInt()%100<mutationRate) {
+            if(rand.nextInt(100)<mutationRate) {
+                //Log.e("chromosome", "MUTATING");
                 if (currentChar == '0')
                     currentChar='1';
                 else
@@ -208,5 +266,30 @@ public class GenAlg {
      */
     public void setChromosome(String chromosome, int index){
         chromosomes[index] = chromosome;
+    }
+
+
+    public void setFitness(int index, float fitness){
+        this.fitness[index] = fitness;
+    }
+
+    public float getFitness(int index){
+        return fitness[index];
+    }
+
+    public float getRoulettePercent(int index) {
+        return roulettePercent[index];
+    }
+
+    public void setRoulettePercent(float roulettePercent, int index) {
+        this.roulettePercent[index] = roulettePercent;
+    }
+
+    public int getMutRate() {
+        return mutRate;
+    }
+
+    public void setMutRate(int mutRate) {
+        this.mutRate = mutRate;
     }
 }

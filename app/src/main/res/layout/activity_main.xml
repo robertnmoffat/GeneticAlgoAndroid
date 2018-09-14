@@ -10,8 +10,33 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.robert.geneticalgoandroid.MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!" />
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/answerTextView"/>
+
+        <Button
+            android:text="Run"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textView"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="45dp"
+            android:layout_marginStart="45dp"
+            android:layout_marginTop="71dp"
+            android:id="@+id/button" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Using genetic algorithm to find equation equalling 23."
+            android:id="@+id/textView" />
+    </LinearLayout>
+
 </RelativeLayout>
